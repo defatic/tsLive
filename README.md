@@ -1,4 +1,4 @@
-# Twitch Streamer Live (tsLive)
+# Twitch Streamer Live (tslive)
 
 ## Description
 
