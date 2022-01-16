@@ -3,8 +3,6 @@
 ## TODO
 
 1. description
-1. install
-1. usage
 
 ---
 
