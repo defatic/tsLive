@@ -21,7 +21,7 @@ declare -A CONF
 
 # Tab completetion taken from rwxrob. rwxrob.tv
 # add `complete -C tslive tslive` to your .bashrc
-cmd="list add delete test"
+cmd="list add delete"
 
 if test -n "$COMP_LINE"; then
   pre="${COMP_LINE##* }"
