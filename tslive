@@ -1,0 +1,119 @@
+#!/bin/bash
+# Depends on the twitch-cli command from https://github.com/twitchdev/twitch-cli
+
+set -e
+
+EXE=${0##*/}
+[[ -z "$EXE" ]] && echo "Could not determine name of executable." && exit 1
+
+declare -A CONF
+
+: "${CONF[path]:="$XDG_CONFIG_HOME/$EXE"}"
+: "${CONF[file]:="streamers"}"
+
+[[ -z $(command -v twitch) ]] && echo "You need to install twitch-cli from https://github.com/twitchdev/twitch-cli" && exit 1
+[[ ! -d "${CONF[path]}" ]] && mkdir -p "${CONF[path]}"
+[[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}"
+[[ ! -s "${CONF[path]}/${CONF[file]}" ]] && echo "You have to populate your ${CONF[path]}/${CONF[file]} with streamer names" && exit 1
+
+# TODO[Feature]: add delete funtion streamer names from streamer name file
+# TODO[Feature]: add usage and help commands?
+
+# Tab completetion taken from rwxrob. rwxrob.tv
+# add `complete -C tslive tslive` to your .bashrc
+cmd="list add delete test"
+
+if test -n "$COMP_LINE"; then
+  pre="${COMP_LINE##* }"
+  for c in ${cmd}; do
+    test -z "${pre}" -o "${c}" != "${c#${pre}}" && echo "$c"
+  done
+  exit
+fi
+
+list() {
+  while IFS= read -r line; do
+    echo "${line}"
+  done < "${CONF[path]}/${CONF[file]}"
+}
+
+add() {
+  shift
+  while IFS= read -r line; do
+    nameArray+=("${line}")
+  done < "${CONF[path]}/${CONF[file]}"
+
+  if [[ "${nameArray[*]}" =~ ${1} ]]; then
+    echo "${BASH_REMATCH[0]} already exists in your list!"
+    exit 1
+  fi
+  echo "$1" >> "${CONF[path]}/${CONF[file]}"
+}
+
+delete() {
+  shift
+  [[ -z ${1} ]] && echo "You have to give a name to delete" && exit 1
+
+  while IFS= read -r line; do
+    nameArray+=("${line}")
+  done < "${CONF[path]}/${CONF[file]}"
+
+  if [[ "${nameArray[*]}" =~ ${1} ]]; then
+    for i in "${!nameArray[@]}"; do
+      if [[ "${nameArray[i]}" = "${1}" ]]; then
+        unset "nameArray[i]"
+      fi
+    done
+
+    echo -n > "${CONF[path]}/${CONF[file]}"
+
+    for l in ${nameArray[*]}; do
+      echo "$l" >> "${CONF[path]}/${CONF[file]}"
+    done
+    echo "Deleting name: ${BASH_REMATCH[0]}"
+  fi
+}
+
+main() {
+  declare -a streamerArray
+
+  echo "Checking which streamers are live!"
+  echo "----------------------------------"
+
+  while read -r streamer; do
+    if [[ $(twitch api get streams -uq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
+      echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
+      streamerArray+=("${streamer}")
+    fi
+  done < "${CONF[path]}/${CONF[file]}"
+
+  if [[ -z ${streamerArray[*]} ]]; then
+    echo "No streamers from your list are live"
+    exit 1
+  fi
+
+  echo "----------------------------------"
+
+  PS3="Select a streamer to watch: "
+
+  select opt in "${streamerArray[@]}" quit; do
+    case $opt in
+      quit)
+        exit 0 ;;
+      *) 
+        xdg-open "https://twitch.tv/$opt"
+        exit 0 ;;
+    esac
+  done
+}
+
+case "$1" in
+  list)
+    list ;;
+  add)
+    add "$@" ;;
+  delete)
+    delete "$@" ;;
+  *)
+    main ;;
+esac
