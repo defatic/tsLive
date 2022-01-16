@@ -11,7 +11,6 @@
 
 CLI tool to check to see if your favorite Twitch Streamers are online!
 
-
 ## Usage
 
 ```bash
