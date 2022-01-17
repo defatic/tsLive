@@ -16,19 +16,15 @@ declare -A CONF
 [[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}"
 [[ ! -s "${CONF[path]}/${CONF[file]}" ]] && echo "You have to populate your ${CONF[path]}/${CONF[file]} with streamer names" && exit 1
 
-# TODO[Feature]: add delete funtion streamer names from streamer name file
-# TODO[Feature]: add usage and help commands?
-
 # Tab completetion taken from rwxrob. rwxrob.tv
 # add `complete -C tslive tslive` to your .bashrc
-cmd="list add delete"
+declare -a commands=(list add delete)
 
-if test -n "$COMP_LINE"; then
-  pre="${COMP_LINE##* }"
-  for c in ${cmd}; do
-    test -z "${pre}" -o "${c}" != "${c#${pre}}" && echo "$c"
+if [[ -n $COMP_LINE ]]; then
+  for c in "${commands[@]}"; do
+    [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
   done
-  exit
+  exit "$?"
 fi
 
 list() {
