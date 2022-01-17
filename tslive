@@ -66,8 +66,8 @@ _delete() {
     echo -n > "${CONF[path]}/${CONF[file]}"
 
     for l in ${nameArray[*]}; do
-      echo "$l" >> "${CONF[path]}/${CONF[file]}"
-    done
+      echo "$l"
+    done >> "${CONF[path]}/${CONF[file]}"
     echo "Deleting name: ${BASH_REMATCH[0]}"
   fi
 }
