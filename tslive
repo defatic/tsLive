@@ -44,6 +44,8 @@ _add() {
     exit 1
   fi
   echo "$1" >> "${CONF[path]}/${CONF[file]}"
+
+  echo "Added: ${1}"
 }
 
 _delete() {
@@ -95,10 +97,10 @@ main() {
   select opt in "${streamerArray[@]}" quit; do
     case $opt in
       quit)
-        exit 0 ;;
+        exit "$?" ;;
       *) 
         xdg-open "https://twitch.tv/$opt"
-        exit 0 ;;
+        exit "$?" ;;
     esac
   done
 }
