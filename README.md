@@ -2,7 +2,7 @@
 
 ## Description
 
-CLI tool to check to see if your favorite Twitch Streamers are online!
+CLI tool to check to check if your favorite Twitch Streamers are online!
 
 ## Dependencies
 
