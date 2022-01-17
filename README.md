@@ -4,6 +4,10 @@
 
 CLI tool to check to see if your favorite Twitch Streamers are online!
 
+## Dependencies
+
+Depends on the twitch cli tool found @ https://github.com/twitchdev/twitch-cli
+
 ## Install
 
 install.sh will symlink tslive to `$HOME/.local/bin` so you have the executable in your path
