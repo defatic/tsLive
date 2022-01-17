@@ -13,8 +13,11 @@ declare -A CONF
 
 [[ -z $(command -v twitch) ]] && echo "You need to install twitch-cli from https://github.com/twitchdev/twitch-cli" && exit 1
 [[ ! -d "${CONF[path]}" ]] && mkdir -p "${CONF[path]}"
-[[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}"
-[[ ! -s "${CONF[path]}/${CONF[file]}" ]] && echo "You have to populate your ${CONF[path]}/${CONF[file]} with streamer names" && exit 1
+[[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}" && echo "Run: [$EXE add name] to get going!" && exit "$?"
+# [[ ! -s "${CONF[path]}/${CONF[file]}" ]] && echo "You have to populate your ${CONF[path]}/${CONF[file]} with streamer names" && exit 1
+# TODO[WORKAROUND!]: Comment out the check if name file is *NOT* zero in size and therefore empty.
+# TODO[Commit]: Added message to test case if name file does *not* exists to then prompt user to add a streamer to name file.
+#     I like the result of these two changes and it seems to have fixed the problem.
 
 # Tab completetion taken from rwxrob. rwxrob.tv
 # add `complete -C tslive tslive` to your .bashrc
