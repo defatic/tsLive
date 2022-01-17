@@ -27,13 +27,13 @@ if [[ -n $COMP_LINE ]]; then
   exit "$?"
 fi
 
-list() {
+_list() {
   while IFS= read -r line; do
     echo "${line}"
   done < "${CONF[path]}/${CONF[file]}"
 }
 
-add() {
+_add() {
   shift
   while IFS= read -r line; do
     nameArray+=("${line}")
@@ -46,7 +46,7 @@ add() {
   echo "$1" >> "${CONF[path]}/${CONF[file]}"
 }
 
-delete() {
+_delete() {
   shift
   [[ -z ${1} ]] && echo "You have to give a name to delete" && exit 1
 
@@ -105,11 +105,11 @@ main() {
 
 case "$1" in
   list)
-    list ;;
+    _list ;;
   add)
-    add "$@" ;;
+    _add "$@" ;;
   delete)
-    delete "$@" ;;
+    _delete "$@" ;;
   *)
     main ;;
 esac
