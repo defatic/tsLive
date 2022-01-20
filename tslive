@@ -15,7 +15,6 @@ declare -A DATA
 [[ ! -d "${DATA[path]}" ]] && mkdir -p "${DATA[path]}"
 [[ ! -e "${DATA[path]}/${DATA[file]}" ]] && touch "${DATA[path]}/${DATA[file]}" && echo "Run: $EXE add [name] to get going!" && exit "$?"
 
-
 _list() {
   while IFS= read -r line; do
     echo "${line}"
@@ -88,13 +87,13 @@ echo "----------------------------------"
 while read -r streamer; do
   if [[ $(twitch api get streams -uq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
-    streamerArray+=("${streamer}")
+    streamerArray+=( "${streamer}" )
   fi
 done < "${DATA[path]}/${DATA[file]}"
 
 if [[ -z ${streamerArray[*]} ]]; then
   echo "No streamers from your list are live"
-  exit 1
+  exit "$?"
 fi
 
 echo "----------------------------------"
