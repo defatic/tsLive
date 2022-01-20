@@ -6,20 +6,20 @@ set -e
 EXE=${0##*/}
 [[ -z "$EXE" ]] && echo "Could not determine name of executable." && exit 1
 
-declare -A CONF
+declare -A DATA
 
-: "${CONF[path]:="$XDG_CONFIG_HOME/$EXE"}"
-: "${CONF[file]:="streamers"}"
+: "${DATA[path]:="$XDG_DATA_HOME/$EXE"}"
+: "${DATA[file]:="streamers"}"
 
 [[ -z $(command -v twitch) ]] && echo "You need to install twitch-cli from https://github.com/twitchdev/twitch-cli" && exit 1
-[[ ! -d "${CONF[path]}" ]] && mkdir -p "${CONF[path]}"
-[[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}" && echo "Run: [$EXE add name] to get going!" && exit "$?"
+[[ ! -d "${DATA[path]}" ]] && mkdir -p "${DATA[path]}"
+[[ ! -e "${DATA[path]}/${DATA[file]}" ]] && touch "${DATA[path]}/${DATA[file]}" && echo "Run: $EXE add [name] to get going!" && exit "$?"
 
 
 _list() {
   while IFS= read -r line; do
     echo "${line}"
-  done < "${CONF[path]}/${CONF[file]}"
+  done < "${DATA[path]}/${DATA[file]}"
 }
 
 _add() {
@@ -27,13 +27,13 @@ _add() {
 
   while IFS= read -r line; do
     nameArray+=("${line}")
-  done < "${CONF[path]}/${CONF[file]}"
+  done < "${DATA[path]}/${DATA[file]}"
 
   if [[ "${nameArray[*]}" =~ ${1} ]]; then
     echo "${BASH_REMATCH[0]} already exists in your list!"
     exit 1
   fi
-  echo "$1" >> "${CONF[path]}/${CONF[file]}"
+  echo "$1" >> "${DATA[path]}/${DATA[file]}"
 
   echo "Added: ${1}"
 }
@@ -43,7 +43,7 @@ _delete() {
 
   while IFS= read -r line; do
     nameArray+=("${line}")
-  done < "${CONF[path]}/${CONF[file]}"
+  done < "${DATA[path]}/${DATA[file]}"
 
   if [[ "${nameArray[*]}" =~ ${1} ]]; then
     for i in "${!nameArray[@]}"; do
@@ -52,11 +52,11 @@ _delete() {
       fi
     done
 
-    echo -n > "${CONF[path]}/${CONF[file]}"
+    echo -n > "${DATA[path]}/${DATA[file]}"
 
     for l in ${nameArray[*]}; do
       echo "$l"
-    done >> "${CONF[path]}/${CONF[file]}"
+    done >> "${DATA[path]}/${DATA[file]}"
     echo "Deleting name: ${BASH_REMATCH[0]}"
   fi
 }
@@ -90,7 +90,7 @@ while read -r streamer; do
     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
     streamerArray+=("${streamer}")
   fi
-done < "${CONF[path]}/${CONF[file]}"
+done < "${DATA[path]}/${DATA[file]}"
 
 if [[ -z ${streamerArray[*]} ]]; then
   echo "No streamers from your list are live"
