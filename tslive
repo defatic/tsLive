@@ -15,16 +15,6 @@ declare -A CONF
 [[ ! -d "${CONF[path]}" ]] && mkdir -p "${CONF[path]}"
 [[ ! -e "${CONF[path]}/${CONF[file]}" ]] && touch "${CONF[path]}/${CONF[file]}" && echo "Run: [$EXE add name] to get going!" && exit "$?"
 
-# Tab completetion taken from rwxrob. rwxrob.tv
-# add `complete -C tslive tslive` to your .bashrc
-declare -a commands=(list add delete)
-
-if [[ -n $COMP_LINE ]]; then
-  for c in "${commands[@]}"; do
-    [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
-  done
-  exit "$?"
-fi
 
 _list() {
   while IFS= read -r line; do
@@ -33,7 +23,8 @@ _list() {
 }
 
 _add() {
-  shift
+  [[ -z "${1}" ]] && echo "You need to provide a name to be added" && exit 1
+
   while IFS= read -r line; do
     nameArray+=("${line}")
   done < "${CONF[path]}/${CONF[file]}"
@@ -48,8 +39,7 @@ _add() {
 }
 
 _delete() {
-  shift
-  [[ -z ${1} ]] && echo "You have to give a name to delete" && exit 1
+  [[ -z "${1}" ]] && echo "You need to provide a name to be deleted" && exit 1
 
   while IFS= read -r line; do
     nameArray+=("${line}")
@@ -71,46 +61,52 @@ _delete() {
   fi
 }
 
-main() {
-  declare -a streamerArray
+# Tab completetion taken from rwxrob. rwxrob.tv
+# add `complete -C <script name> <script name>` to your .bashrc
+declare -a commands=( list add delete )
 
-  echo "Checking which streamers are live!"
-  echo "----------------------------------"
-
-  while read -r streamer; do
-    if [[ $(twitch api get streams -uq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
-      echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
-      streamerArray+=("${streamer}")
-    fi
-  done < "${CONF[path]}/${CONF[file]}"
-
-  if [[ -z ${streamerArray[*]} ]]; then
-    echo "No streamers from your list are live"
-    exit 1
-  fi
-
-  echo "----------------------------------"
-
-  PS3="Select a streamer to watch: "
-
-  select opt in "${streamerArray[@]}" quit; do
-    case $opt in
-      quit)
-        exit "$?" ;;
-      *) 
-        xdg-open "https://twitch.tv/$opt"
-        exit "$?" ;;
-    esac
+if [[ -n $COMP_LINE ]]; then
+  for c in "${commands[@]}"; do
+    [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
   done
-}
+  exit "$?"
+fi
 
-case "$1" in
-  list)
-    _list ;;
-  add)
-    _add "$@" ;;
-  delete)
-    _delete "$@" ;;
-  *)
-    main ;;
-esac
+# Delegation
+if [[ -n "$1" ]]; then
+  declare cmd="$1"; shift
+  for  c in "${commands[@]}"; do
+    [[ $c == "$cmd" ]] && "_$cmd" "$@" && exit "$?"
+  done
+fi
+
+declare -a streamerArray
+
+echo "Checking which streamers are live!"
+echo "----------------------------------"
+
+while read -r streamer; do
+  if [[ $(twitch api get streams -uq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
+    echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
+    streamerArray+=("${streamer}")
+  fi
+done < "${CONF[path]}/${CONF[file]}"
+
+if [[ -z ${streamerArray[*]} ]]; then
+  echo "No streamers from your list are live"
+  exit 1
+fi
+
+echo "----------------------------------"
+
+PS3="Select a streamer to watch: "
+
+select opt in "${streamerArray[@]}" quit; do
+  case $opt in
+    quit)
+      exit "$?" ;;
+    *) 
+      xdg-open "https://twitch.tv/$opt"
+      exit "$?" ;;
+  esac
+done
