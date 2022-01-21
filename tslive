@@ -85,7 +85,7 @@ echo "Checking which streamers are live!"
 echo "----------------------------------"
 
 while read -r streamer; do
-  if [[ $(twitch api get streams -uq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
+  if [[ $(twitch api get streams -Puq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
     streamerArray+=( "${streamer}" )
   fi
