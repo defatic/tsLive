@@ -51,12 +51,11 @@ _delete() {
       fi
     done
 
-    echo -n > "${DATA[path]}/${DATA[file]}"
+    echo "Deleting name: ${BASH_REMATCH[0]}"
 
     for l in ${nameArray[*]}; do
       echo "$l"
-    done >> "${DATA[path]}/${DATA[file]}"
-    echo "Deleting name: ${BASH_REMATCH[0]}"
+    done > "${DATA[path]}/${DATA[file]}"
   fi
 }
 
