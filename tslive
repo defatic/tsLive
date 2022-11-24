@@ -104,7 +104,7 @@ select opt in "${streamerArray[@]}" quit; do
     quit)
       exit "$?" ;;
     *) 
-      xdg-open "https://twitch.tv/$opt" 2>/dev/null
+      xdg-open "https://twitch.tv/$opt" 2>/dev/null &
       exit "$?" ;;
   esac
 done
