@@ -73,7 +73,7 @@ fi
 # Delegation
 if [[ -n "$1" ]]; then
   declare cmd="$1"; shift
-  for  c in "${commands[@]}"; do
+  for c in "${commands[@]}"; do
     [[ $c == "$cmd" ]] && "_$cmd" "$@" && exit "$?"
   done
 fi
@@ -85,7 +85,10 @@ echo "----------------------------------"
 
 while read -r streamer; do
   if [[ $(twitch api get streams -Puq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
-    echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
+	twitch_title=$(twitch api get streams -Pq user_login="$streamer" | jq .data[].title)
+#     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
+    echo "$streamer"
+	echo "  $twitch_title"
     streamerArray+=( "${streamer}" )
   fi
 done < "${DATA[path]}/${DATA[file]}"
@@ -104,7 +107,16 @@ select opt in "${streamerArray[@]}" quit; do
     quit)
       exit "$?" ;;
     *) 
-      xdg-open "https://twitch.tv/$opt" 2>/dev/null &
+	  select opt_app in browser streamlink; do
+		case $opt_app in
+		  browser)
+			  xdg-open "https://twitch.tv/$opt" 2>/dev/null &
+			  exit "$?" ;;
+		  streamlink)
+		  	  sl "https://twitch.tv/$opt" 2>/dev/null &
+			  exit "$?" ;;
+	    esac
+	  done
       exit "$?" ;;
   esac
 done
