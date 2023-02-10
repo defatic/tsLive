@@ -86,8 +86,10 @@ echo "----------------------------------"
 while read -r streamer; do
   if [[ $(twitch api get streams -Puq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
 	twitch_title=$(twitch api get streams -Pq user_login="$streamer" | jq .data[].title)
+	twitch_game_name=$(twitch api get streams -Pq user_login="$streamer" | jq .data[].game_name)
 #     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
     echo "$streamer"
+	echo "  $twitch_game_name"
 	echo "  $twitch_title"
     streamerArray+=( "${streamer}" )
   fi
