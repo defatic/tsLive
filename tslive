@@ -68,7 +68,7 @@ if [[ -n $COMP_LINE ]]; then
   for c in "${commands[@]}"; do
     [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
   done
-  exit "$?"
+  exit
 fi
 
 # Delegation
@@ -79,6 +79,8 @@ if [[ -n "$1" ]]; then
   done
 fi
 
+# Output
+
 declare -a streamerArray
 
 echo "Checking which streamers are live!"
@@ -86,19 +88,17 @@ echo "----------------------------------"
 
 while read -r streamer; do
   if [[ $(twitch api get streams -Puq user_login="$streamer") =~ (\"type\"\:\"live\") ]]; then
-	twitch_title=$(twitch api get streams -Pq user_login="$streamer" | jq .data[].title)
 	twitch_game_name=$(twitch api get streams -Pq user_login="$streamer" | jq .data[].game_name)
 #     echo "$streamer is ${BASH_REMATCH[0]: -5:4}"
     echo "$streamer"
 	echo "  $twitch_game_name"
-	echo "  $twitch_title"
     streamerArray+=( "${streamer}" )
   fi
 done < "${DATA[path]}/${DATA[file]}"
 
-if [[ -z ${streamerArray[*]} ]]; then
+if [[ -z "${streamerArray[*]}" ]]; then
   echo "No streamers from your list are live"
-  exit "$?"
+  exit
 fi
 
 echo "----------------------------------"
@@ -108,18 +108,18 @@ PS3="Select a streamer to watch: "
 select opt in "${streamerArray[@]}" quit; do
   case $opt in
     quit)
-      exit "$?" ;;
+      exit ;;
     *) 
 	  select opt_app in browser streamlink; do
 		case $opt_app in
 		  browser)
 			  xdg-open "https://twitch.tv/$opt" 2>/dev/null &
-			  exit "$?" ;;
+			  exit ;;
 		  streamlink)
 		  	  sl "https://twitch.tv/$opt" 2>/dev/null &
-			  exit "$?" ;;
+			  exit ;;
 	    esac
 	  done
-      exit "$?" ;;
+      exit ;;
   esac
 done
