@@ -1,0 +1,157 @@
+#!/bin/bash
+# This bash script uses the following CLI commands
+#   jq [URL]
+#   gum [URL]
+#   streamlink [URL]
+#   twitch [URL]
+
+set -e
+
+EXE=${0##*/}
+[[ -z "$EXE" ]] && echo "Could not determine name of executable." && exit 1
+
+declare -A URLS
+
+: "${URLS[jq]:="https://stedolan.github.io/jq/"}"
+: "${URLS[gum]:="https://github.com/charmbracelet/gum"}"
+: "${URLS[sl]:="https://streamlink.github.io/install.html"}"
+: "${URLS[twitch]:="https://github.com/twitchdev/twitch-cli"}"
+
+# Check for dependencies
+[[ -z $(command -v jq) ]] && echo "jq is not installed! [${URLS[jq]}]" && exit 1
+[[ -z $(command -v gum) ]] && echo "gum is not installed! [${URLS[gum]}]" && exit 1
+[[ -z $(command -v streamlink) ]] && echo "streamlink is not installed! [${URLS[sl]}]" && exit 1
+[[ -z $(command -v twitch) ]] && echo "twitch CLI is not installed! [${URLS[twitch]}]" && exit 1
+
+# Data setup
+declare -A DATA
+
+: "${DATA[path]:="$XDG_DATA_HOME/$EXE"}"
+: "${DATA[file]:="streamers"}"
+: "${DATA[state]:="online"}"
+
+# Check if directories and files exists
+[[ ! -d "${DATA[path]}" ]] && mkdir -p "${DATA[path]}"
+[[ ! -e "${DATA[path]}/${DATA[file]}" ]] && touch "${DATA[path]}/${DATA[file]}"
+[[ ! -e "${DATA[path]}/${DATA[state]}" ]] && touch "${DATA[path]}/${DATA[state]}" && \
+    echo "Online,Game category" > "${DATA[path]}/${DATA[state]}"
+
+# Command functions
+_list() {
+    gum pager --border-foreground="4" --line-number.foreground="243" < "${DATA[path]}/${DATA[file]}"
+}
+
+_add() {
+# TODO: add support for adding more then 1 
+    ADDED=$(gum input --value="$1" --placeholder "Enter a streamers name")
+    [[ -n "${ADDED}" ]] && \
+        echo "${ADDED}" >> "${DATA[path]}/${DATA[file]}" && \
+        echo " Added: ${ADDED}"
+}
+
+_delete() {
+    while IFS= read -r line; do
+        nameArray+=("${line}")
+    done < "${DATA[path]}/${DATA[file]}"
+
+    SELECTED=$(gum choose --limit="1" < "${DATA[path]}/${DATA[file]}")
+
+    if [[ "${nameArray[*]}" =~ ${SELECTED} ]]; then
+        for i in "${!nameArray[@]}"; do
+            if [[ "${nameArray[i]}" = "${SELECTED}" ]]; then
+                unset "nameArray[i]"
+            fi
+        done
+
+        echo " Deleting: ${BASH_REMATCH[0]}"
+
+        for i in "${nameArray[@]}"; do
+            echo "${i}"
+        done > "${DATA[path]}/${DATA[file]}"
+    fi
+}
+
+# Tab competition taken from rwxrob. rwxrob.tv
+# add `complete -C <script name> <script name>` to your .bashrc
+declare -a commands=(list add delete)
+
+if [[ -n $COMP_LINE ]]; then
+  for c in "${commands[@]}"; do
+    [[ ${c:0:${#2}} == "${2,,}" ]] && echo "$c"
+  done
+  exit
+fi
+
+# Delegation
+if [[ -n "$1" ]]; then
+  declare cmd="$1"; shift
+  for c in "${commands[@]}"; do
+    [[ $c == "$cmd" ]] && "_$cmd" "$@" && exit "$?"
+  done
+fi
+
+# Main
+#
+# gum style
+# Margin "0 1" = first number is margin from top second is form left
+# Padding "1 0" = first number is top & bottom and second is left & right
+gum style \
+    --border=normal \
+    --margin="0 1" \
+    --padding="1 0" \
+    --width="50" \
+    --align="center" \
+    --border-foreground="4" \
+    --foreground="4" \
+    "Twitch Streamers Live!"
+
+declare -A onlineArray
+
+if [[ -s "${DATA[path]}/${DATA[state]}" ]]; then
+    rm "${DATA[path]}/${DATA[state]}"
+    touch "${DATA[path]}/${DATA[state]}"
+    echo "Online,Game category" > "${DATA[path]}/${DATA[state]}"
+fi
+
+while IFS= read -r line; do
+    isOnline=$(gum spin -s dot --title="Fetching ${line}..." --show-output -- \
+               twitch api get streams -Puq user_login="${line}" | jq -r .data[].user_name)
+
+    if [[ -n "${isOnline}" ]]; then
+        category=$(gum spin -s line --title="Fetching ${isOnline}'s category..." --show-output -- \
+                   twitch api get streams -Pq user_login="${isOnline}" | jq -r .data[].game_name)
+
+        onlineArray+=([${isOnline}]="${category}")
+
+        echo "${isOnline},${category}" >> "${DATA[path]}/${DATA[state]}"
+    fi
+done < "${DATA[path]}/${DATA[file]}"
+
+echo "quit, " >> "${DATA[path]}/${DATA[state]}" 
+
+opt=$(gum table --separator="," --widths="25" --file="${DATA[path]}/${DATA[state]}")
+
+case "${opt%,*}" in
+    quit)
+        gum style \
+            --border=normal \
+            --margin="0 1" \
+            --padding="0 0" \
+            --width="50" \
+            --align="center" \
+            --border-foreground="4" \
+            --foreground="1" \
+            "Quiting!"
+        exit 0 ;;
+esac
+
+player=$(gum choose --limit="1" Browser Streamlink)
+
+case "${player}" in
+    Browser)
+        xdg-open "https://twitch.tv/${opt%,*}" 2>/dev/null &
+    ;;
+    Streamlink)
+        exec streamlink --twitch-disable-ads -p mpv "https://twitch.tv/${opt%,*}" best >/dev/null &
+    ;;
+esac
