@@ -1,3 +1,3 @@
 #!/bin/sh
 
-ln -sf $PWD/tslive $HOME/.local/bin/tslive
+ln -sf $PWD/tsl $HOME/.local/bin/tsl
