@@ -114,11 +114,17 @@ if [[ -s "${DATA[path]}/${DATA[state]}" ]]; then
 fi
 
 while IFS= read -r line; do
-    isOnline=$(gum spin -s dot --title="Fetching ${line}..." --show-output -- \
+    isOnline=$(gum spin -s dot \
+               --spinner.margin="0 1" \
+               --title="Fetching ${line}..." \
+               --show-output -- \
                twitch api get streams -Puq user_login="${line}" | jq -r .data[].user_name)
 
     if [[ -n "${isOnline}" ]]; then
-        category=$(gum spin -s line --title="Fetching ${isOnline}'s category..." --show-output -- \
+        category=$(gum spin -s line \
+                   --spinner.margin="0 1" \
+                   --title="Fetching ${isOnline}'s category..." \
+                   --show-output -- \
                    twitch api get streams -Pq user_login="${isOnline}" | jq -r .data[].game_name)
 
         onlineArray+=([${isOnline}]="${category}")
