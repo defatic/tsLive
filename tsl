@@ -42,7 +42,7 @@ _list() {
 }
 
 _add() {
-# TODO: add support for adding more then 1 
+    # TODO: add support for adding more then (1) one entry
     ADDED=$(gum input --value="$1" --placeholder "Enter a streamers name")
     [[ -n "${ADDED}" ]] && \
         echo "${ADDED}" >> "${DATA[path]}/${DATA[file]}" && \
@@ -96,10 +96,10 @@ fi
 # Margin "0 1" = first number is margin from top second is form left
 # Padding "1 0" = first number is top & bottom and second is left & right
 gum style \
-    --border=normal \
+    --border=none \
     --margin="0 1" \
     --padding="1 0" \
-    --width="50" \
+    --width="35" \
     --align="center" \
     --border-foreground="4" \
     --foreground="4" \
@@ -140,10 +140,10 @@ opt=$(gum table --separator="," --widths="25" --file="${DATA[path]}/${DATA[state
 case "${opt%,*}" in
     quit)
         gum style \
-            --border=normal \
+            --border=none \
             --margin="0 1" \
             --padding="0 0" \
-            --width="50" \
+            --width="35" \
             --align="center" \
             --border-foreground="4" \
             --foreground="1" \
